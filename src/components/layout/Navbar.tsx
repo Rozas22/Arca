@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import { Home, PlayCircle, BarChart2, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+import { ThemeToggle } from '@/components/ThemeToggle';
+
 export function Navbar() {
   const pathname = usePathname();
 
@@ -37,7 +39,6 @@ export function Navbar() {
               className={cn(
                 "group flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-all duration-200",
                 "md:w-full md:flex-row md:justify-center lg:justify-start lg:px-4 lg:py-3",
-                // Hit target mínimo de 44px para accesibilidad móvil (Apple HIG)
                 "min-h-[44px] min-w-[44px]", 
                 isActive 
                   ? "text-blue-600 dark:text-blue-500 bg-blue-50 dark:bg-blue-500/10" 
@@ -54,6 +55,11 @@ export function Navbar() {
             </Link>
           );
         })}
+      </div>
+      
+      {/* Theme Toggle (Abajo en Sidebar, o extra en móvil) */}
+      <div className="hidden md:flex md:mt-auto md:mb-8 md:w-full md:justify-center lg:justify-start lg:px-8">
+        <ThemeToggle />
       </div>
     </nav>
   );
