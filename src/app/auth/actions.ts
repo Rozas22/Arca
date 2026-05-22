@@ -59,3 +59,10 @@ export async function signup(formData: FormData) {
     redirect('/dashboard');
   }
 }
+
+export async function signOut() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  revalidatePath('/login');
+  redirect('/login');
+}
