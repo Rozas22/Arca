@@ -1,27 +1,57 @@
-'use client';
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useTheme } from 'next-themes';
+import { StatsChart } from './stats-chart';
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import { BarChart2 } from 'lucide-react';
 
-// Datos Mock (falsos) de los últimos 7 días
-const mockData = [
-  { name: 'Lun', minutos: 45 },
-  { name: 'Mar', minutos: 60 },
-  { name: 'Mié', minutos: 30 },
-  { name: 'Jue', minutos: 90 },
-  { name: 'Vie', minutos: 25 },
-  { name: 'Sáb', minutos: 120 },
-  { name: 'Dom', minutos: 80 },
-];
+export const dynamic = 'force-dynamic';
 
-export default function StatsPage() {
-  const { resolvedTheme } = useTheme();
+export default async function StatsPage() {
+  const supabase = await createClient();
 
-  // Colores dinámicos para el gráfico basados en el tema
-  const textColor = resolvedTheme === 'dark' ? '#a3a3a3' : '#525252';
-  const gridColor = resolvedTheme === 'dark' ? '#262626' : '#e5e5e5';
-  const barColor = '#2563eb'; // blue-600
+  // Validar sesión
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    redirect('/login');
+  }
+
+  // Calcular la fecha de hace 7 días
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+
+  // Obtener sesiones completadas de los últimos 7 días
+  const { data: sessions } = await supabase
+    .from('study_sessions')
+    .select('start_time, duration_minutes')
+    .eq('user_id', user.id)
+    .eq('status', 'completed')
+    .gte('start_time', sevenDaysAgo.toISOString());
+
+  // Generar la estructura de los últimos 7 días (incluso si no hay datos)
+  const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const chartData: { name: string; minutos: number }[] = [];
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    const dayName = days[d.getDay()];
+    chartData.push({ name: dayName, minutos: 0, dateStr: d.toDateString() } as any);
+  }
+
+  // Rellenar con los datos reales
+  if (sessions) {
+    sessions.forEach(session => {
+      const sessionDate = new Date(session.start_time).toDateString();
+      const targetDay = chartData.find((d: any) => d.dateStr === sessionDate);
+      if (targetDay) {
+        targetDay.minutos += (session.duration_minutes || 0);
+      }
+    });
+  }
+
+  const totalMinutos = chartData.reduce((acc, curr) => acc + curr.minutos, 0);
 
   return (
     <div className="min-h-screen bg-neutral-50/50 dark:bg-neutral-950 p-6 md:p-12 font-sans w-full">
@@ -38,44 +68,17 @@ export default function StatsPage() {
         <section>
           <Card className="border-none shadow-sm bg-white dark:bg-neutral-900">
             <CardHeader>
-              <CardTitle>Minutos Estudiados</CardTitle>
-              <CardDescription>Resumen de los últimos 7 días</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart2 className="h-5 w-5 text-blue-500" />
+                Minutos Estudiados
+              </CardTitle>
+              <CardDescription>
+                Has acumulado {totalMinutos} minutos en los últimos 7 días.
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[350px] w-full mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={mockData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
-                    <XAxis 
-                      dataKey="name" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fill: textColor, fontSize: 12 }} 
-                      dy={10}
-                    />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fill: textColor, fontSize: 12 }} 
-                    />
-                    <Tooltip 
-                      cursor={{ fill: resolvedTheme === 'dark' ? '#171717' : '#f5f5f5' }}
-                      contentStyle={{ 
-                        backgroundColor: resolvedTheme === 'dark' ? '#171717' : '#ffffff',
-                        borderColor: resolvedTheme === 'dark' ? '#262626' : '#e5e5e5',
-                        borderRadius: '8px',
-                        color: resolvedTheme === 'dark' ? '#ffffff' : '#000000'
-                      }}
-                    />
-                    <Bar 
-                      dataKey="minutos" 
-                      fill={barColor} 
-                      radius={[4, 4, 0, 0]} 
-                      maxBarSize={40}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              {/* Aquí pasamos los datos del servidor al componente del cliente */}
+              <StatsChart data={chartData} />
             </CardContent>
           </Card>
         </section>
