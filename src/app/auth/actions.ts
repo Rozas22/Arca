@@ -5,38 +5,45 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 
 export async function login(formData: FormData) {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
 
-  const data = {
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
-  };
+    const data = {
+      email: formData.get('email') as string,
+      password: formData.get('password') as string,
+    };
 
-  const { error } = await supabase.auth.signInWithPassword(data);
+    const { error } = await supabase.auth.signInWithPassword(data);
 
-  if (error) {
-    return { error: error.message };
+    if (error) {
+      return { error: error.message };
+    }
+
+    revalidatePath('/dashboard');
+    redirect('/dashboard');
+  } catch (error: any) {
+    return { error: error?.message || 'Error interno al intentar iniciar sesión. Por favor, intenta de nuevo.' };
   }
-
-  revalidatePath('/dashboard');
-  redirect('/dashboard');
 }
 
 export async function signup(formData: FormData) {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
 
-  const data = {
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
-  };
+    const data = {
+      email: formData.get('email') as string,
+      password: formData.get('password') as string,
+    };
 
-  // Por defecto, Supabase requiere confirmación de email (si no está desactivado en el panel)
-  const { error } = await supabase.auth.signUp(data);
+    const { error } = await supabase.auth.signUp(data);
 
-  if (error) {
-    return { error: error.message };
+    if (error) {
+      return { error: error.message };
+    }
+
+    revalidatePath('/dashboard');
+    redirect('/dashboard');
+  } catch (error: any) {
+    return { error: error?.message || 'Error interno al intentar registrarse. Por favor, intenta de nuevo.' };
   }
-
-  revalidatePath('/dashboard');
-  redirect('/dashboard');
 }

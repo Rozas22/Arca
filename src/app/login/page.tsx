@@ -18,18 +18,22 @@ export default function LoginPage() {
     setError(null);
     setIsLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-    
-    // Llamada a las Server Actions de Next.js
-    const result = isLoginMode 
-      ? await login(formData)
-      : await signup(formData);
+    try {
+      const formData = new FormData(e.currentTarget);
+      
+      // Llamada a las Server Actions de Next.js
+      const result = isLoginMode 
+        ? await login(formData)
+        : await signup(formData);
 
-    if (result?.error) {
-      setError(result.error);
+      if (result?.error) {
+        setError(result.error);
+      }
+    } catch (err) {
+      setError('Ocurrió un error inesperado de conexión. Por favor revisa tu internet y vuelve a intentar.');
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   return (
@@ -47,12 +51,6 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-5">
-            {error && (
-              <div className="p-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50 rounded-lg flex items-center gap-2 animate-in fade-in">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                <p>{error}</p>
-              </div>
-            )}
             <div className="space-y-2">
               <Label htmlFor="email">Correo Electrónico</Label>
               <Input 
@@ -74,11 +72,21 @@ export default function LoginPage() {
                 className="bg-neutral-50 dark:bg-neutral-950"
               />
             </div>
-            <Button className="w-full text-md h-11" type="submit" disabled={isLoading}>
-              {isLoading 
-                ? (isLoginMode ? 'Iniciando sesión...' : 'Registrando...') 
-                : (isLoginMode ? 'Iniciar Sesión' : 'Crear Cuenta')}
-            </Button>
+            
+            <div className="space-y-4 pt-2">
+              <Button className="w-full text-md h-11" type="submit" disabled={isLoading}>
+                {isLoading 
+                  ? (isLoginMode ? 'Iniciando sesión...' : 'Registrando...') 
+                  : (isLoginMode ? 'Iniciar Sesión' : 'Crear Cuenta')}
+              </Button>
+
+              {error && (
+                <div className="p-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50 rounded-lg flex items-start gap-2 animate-in fade-in">
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <p>{error}</p>
+                </div>
+              )}
+            </div>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4 text-center text-sm text-neutral-500">
