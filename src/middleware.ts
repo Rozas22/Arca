@@ -32,6 +32,13 @@ export async function middleware(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser()
 
+    // Manejo de la ruta raíz '/'
+    if (request.nextUrl.pathname === '/') {
+      const url = request.nextUrl.clone()
+      url.pathname = user ? '/dashboard' : '/login'
+      return NextResponse.redirect(url)
+    }
+
     // Lista de rutas protegidas
     const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard')
     
