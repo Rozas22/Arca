@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Play, Clock, Target, CheckCircle2, AlertCircle } from 'lucide-react';
@@ -65,11 +66,14 @@ export default async function DashboardPage() {
         {/* Botón Central de Acción */}
         <section className="flex justify-center items-center py-12">
           <Button 
+            asChild
             size="lg" 
             className="h-24 px-12 text-xl md:text-2xl rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
           >
-            <Play className="mr-3 h-8 w-8 fill-current" />
-            Iniciar Sesión de Estudio
+            <Link href="/estudiar">
+              <Play className="mr-3 h-8 w-8 fill-current" />
+              Iniciar Sesión de Estudio
+            </Link>
           </Button>
         </section>
 

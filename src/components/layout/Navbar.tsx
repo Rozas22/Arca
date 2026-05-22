@@ -12,7 +12,7 @@ export function Navbar() {
 
   const navItems = [
     { name: 'Inicio', href: '/dashboard', icon: Home },
-    { name: 'Estudiar', href: '/session', icon: PlayCircle },
+    { name: 'Estudiar', href: '/estudiar', icon: PlayCircle },
     { name: 'Estadísticas', href: '/stats', icon: BarChart2 },
     { name: 'Ajustes', href: '/settings', icon: Settings },
   ];
